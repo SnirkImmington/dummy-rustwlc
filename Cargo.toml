@@ -1,0 +1,8 @@
+[package]
+name = "rustwlc"
+version = "0.3.1"
+authors = ["Snirk Immington <snirk.immington@gmail.com>"]
+
+[dependencies]
+libc = "0.2.10"
+bitflags = "0.4.0"
