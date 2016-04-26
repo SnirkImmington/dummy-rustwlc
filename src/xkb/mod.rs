@@ -3,8 +3,6 @@
 //! We do not wrap the full funcionality of xkb, as wlc handles
 //! most of the setup.
 
-#[cfg(test)]
-mod tests;
 pub mod keysyms;
 
 /*
