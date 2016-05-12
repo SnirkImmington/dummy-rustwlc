@@ -9,7 +9,8 @@ pub mod pointer {
 
     /// Gets the current position of the mouse.
     pub fn get_position() -> Point {
-        unimplemented!()
+        let point = Point { x: 0, y: 0 };
+        return point;
     }
 
     /// Sets the current mouse position. Required on mouse move callback.

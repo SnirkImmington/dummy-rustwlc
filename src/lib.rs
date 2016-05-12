@@ -1,8 +1,62 @@
-//! Module defining main wlc functions.
+//! `rustwlc` is a wrapper for [wlc][], a library for writing a window
+//! manager using the [wayland][] protocol. Compositors using rustwlc will
+//! not need unsafe code for basic interaction with wayland.
+//!
+//! # wlc
+//!
+//! [wlc][] is a library written in C which acts as a wayland compositor. It
+//! provides abstractions over wayland via structs such as `WlcView`,
+//! `WlcOutput`, `Geometry`, or `KeyboardModifiers`. It provides callbacks
+//! (found in the `callback` module) for events such as `view_created`,
+//! `mouse_move`, or `view_focused`.
+//!
+//! # Example
+//!
+//! For more information on how to use rustwlc, see the `callbacks` module
+//! and the `run_wlc()` method.
+//!
+//! For a more complete example, see [the example program][] on
+//! [our GitHub page][].
+//!
+//! ```rust
+//! extern crate rustwlc;
+//! use rustwlc::callback;
+//! // VIEW_ACTIVATED is a bitflags enum variant, and those must be imported
+//! // manually, or using a wildcatd.
+//! use rustwlc::{WlcView, VIEW_ACTIVATED};
+//!
+//! // Callbacks must be labeled extern as they will be called from C
+//! extern "C" fn view_created(view: WlcView) -> bool {
+//!     view.bring_to_front();
+//!     view.focus();
+//!     return true;
+//! }
+//!
+//! extern "C" fn view_focus(view: WlcView, focused: bool) {
+//!     view.set_state(VIEW_ACTIVATED, focused);
+//! }
+//!
+//! // Entry point for a compositor
+//! fn compsoitor_main() {
+//!     callback::view_created(view_created);
+//!     callback::view_focus(view_focus);
+//!
+//!     // The default log handler will print wlc logs to stdout
+//!     rustwlc::log_set_default_handler();
+//!     let run_fn = rustwlc::init().expect("Unable to initialize!");
+//!     // This will run wlc's event loop and launch wayland.
+//!     run_fn();
+//! }
+//! # fn main() {}
+//! ```
+//! For a more full-featured compositor using rustwlc, see [way-cooler][].
+//! [wlc]: https://github.com/Cloudef/wlc
+//! [wayland]: https://wayland.freedesktop.org/
+//! [the example program]: https://github.com/Immington-Industries/rust-wlc/blob/master/example/src/main.rs
+//! [our GitHub page]: https://github.com/Immington-Industries/rustwlc
+//! [way-cooler]: https://github.com/Immington-Industries/way-cooler
 
-#![allow(dead_code)]
-#![allow(unused_imports)]
-#![allow(unused_variables)]
+#![warn(missing_docs)]
 
 extern crate libc;
 
@@ -19,9 +73,7 @@ pub mod wayland;
 pub mod xkb;
 
 pub use types::*;
-
-// Log Handler hack
-static mut rust_logging_fn: fn(_type: LogType, string: &str) = default_log_callback;
+pub use handle::{WlcOutput, WlcView};
 
 /// Query backend wlc is using.
 ///
@@ -30,7 +82,7 @@ static mut rust_logging_fn: fn(_type: LogType, string: &str) = default_log_callb
 /// * DRM: "Direct Rendering Manager" - running on tty
 /// * X11: Running inside an X server
 pub fn get_backend_type() -> BackendType {
-    unimplemented!()
+    BackendType::None
 }
 
 /// Initialize wlc's callbacks and logger with a `WlcInterface`.
@@ -53,7 +105,7 @@ pub fn get_backend_type() -> BackendType {
 /// ```no_run
 /// use rustwlc;
 /// use rustwlc::callback;
-/// use rustwlc::handle::WlcView;
+/// use rustwlc::WlcView;
 ///
 /// // An example callback function
 /// // See the various functions in the callback module for more information
@@ -76,7 +128,7 @@ pub fn get_backend_type() -> BackendType {
 /// run_wlc();
 /// ```
 pub fn init() -> Option<fn() -> ()> {
-    Some(run_wlc)
+        None
 }
 
 /// Deprecated alias to init().
@@ -93,12 +145,11 @@ pub fn init2() -> Option<fn() -> ()> {
 /// The initialize functions will return this function in an Option.
 /// Only then can it be called to being wlc's main event loop.
 fn run_wlc() {
-    println!("wlc has been run!");
+    println!("Attempted to run wlc!");
 }
 
 /// Halts execution of wlc.
 pub fn terminate() {
-    panic!("Called rustwlc::terminate!")
 }
 
 /// Registers a C callback for wlc logging.
@@ -152,7 +203,6 @@ fn default_log_callback(log_type: LogType, text: &str) {
 /// }
 /// ```
 pub fn log_set_default_handler() {
-    log_set_rust_handler(default_log_callback);
 }
 
 /// Unsafe strings conversion function.
@@ -169,5 +219,9 @@ pub fn log_set_default_handler() {
 /// }
 /// ```
 pub unsafe fn pointer_to_string(pointer: *const libc::c_char) -> String {
-    unimplemented!()
+    if pointer.is_null() {
+        return "".to_string();
+    }
+    let slice = ffi::CStr::from_ptr(pointer);
+    slice.to_string_lossy().into_owned()
 }

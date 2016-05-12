@@ -85,8 +85,6 @@ pub mod keysyms;
  * Author: Daniel Stone <daniel@fooishbar.org>
  */
 
-use libc::{c_char, size_t};
-use std::ffi::CString;
 // Keysym utils functions
 
 // An xkb keycode.
@@ -154,7 +152,6 @@ pub struct XKBState;
 #[repr(C)]
 pub struct XKBKeymap;
 
-
 impl Keysym {
 
     /// Whether this keysym is a valid keysym.
@@ -216,7 +213,7 @@ impl Keysym {
     /// returns: The keysym. If the name is invalid, returns None.
     ///
     /// # Examples
-    /// ```rust
+    /// ```no-run
     /// use rustwlc::xkb::{Keysym, NameFlags};
     ///
     /// let key_match_a = Keysym::from_name("a".to_string(), NameFlags::None);
@@ -226,13 +223,13 @@ impl Keysym {
     /// assert!(key_a.is_valid());
     /// ```
     pub fn from_name(name: String, flags: NameFlags) -> Option<Keysym> {
-        unimplemented!()
+        None
     }
 
     /// Gets name name of the keysym.
     ///
     /// # Examples
-    /// ```rust
+    /// ```no-run
     /// use rustwlc::xkb::{Keysym, NameFlags};
     ///
     /// let key = Keysym::from_name("a".to_string(), NameFlags::None).unwrap();
@@ -240,12 +237,12 @@ impl Keysym {
     /// assert_eq!(key.get_name(), Some("a".to_string()));
     /// ```
     pub fn get_name(&self) -> Option<String> {
-        unimplemented!()
+        None
     }
 
     /// Gets the Unicode/UTF8 representation of this keysym.
     pub fn to_utf8(&self) -> Option<String> {
-        unimplemented!()
+        None
     }
 
     /// Gets the Unicode/UTF32 representation of this keysym.

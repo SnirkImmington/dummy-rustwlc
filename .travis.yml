@@ -7,5 +7,6 @@ matrix:
   allow_failures:
     - rust: nightly
 notifications:
+  slack: way-cooler:bf5hNqMVmTgFpHo3a3vgZ4Lu 
   email: false
 script: cargo build --verbose

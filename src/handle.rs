@@ -1,20 +1,25 @@
 //! Contains definitions for wlc handle types.
+//!
+//! # Implementations
+//! - **Debug**: pointer-prints the underlying `uintptr_t` handle
+//! - **Eq, Ord**: compare the underlying `uintptr_t` handle
+//! - **Clone**: View handles can safely be cloned.
 
-extern crate libc;
 use libc::{uintptr_t, c_char, c_void};
 
 use super::pointer_to_string;
 use super::types::{Geometry, ResizeEdge, Point, Size, ViewType, ViewState};
 
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 /// Represents a handle to a wlc view.
-pub struct WlcView(libc::uintptr_t);
+///
+pub struct WlcView(uintptr_t);
 
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 /// Represents a handle to a wlc output.
-pub struct WlcOutput(libc::uintptr_t);
+pub struct WlcOutput(uintptr_t);
 
 impl From<WlcView> for WlcOutput {
     fn from(view: WlcView) -> Self {
@@ -28,8 +33,10 @@ impl From<WlcOutput> for WlcView {
     }
 }
 
+static ZERO_RES: Size = Size { w: 0, h: 0 };
 
 impl WlcOutput {
+
     /// Compatability/debugging function.
     ///
     /// wlc internally stores views and outputs under the same type.
@@ -38,6 +45,31 @@ impl WlcOutput {
     /// a bug report.
     pub fn as_view(self) -> WlcView {
         return WlcView::from(self)
+    }
+
+    /// Create a dummy WlcOutput for testing purposes.
+    ///
+    /// # Unsafety
+    /// The following operations on a dummy WlcOutput will cause crashes:
+    ///
+    /// - `WlcOutput::focused` when wlc is not running
+    /// - `WlcOutput::list` when wlc is not running
+    /// - `WlcOutput::set_resolution` on a dummy output
+    ///
+    /// In addition, `WlcOutput::set_views` will return an error.
+    ///
+    /// All other methods can be used on dummy outputs.
+    ///
+    /// # Example
+    /// ```rust
+    /// # use rustwlc::WlcOutput;
+    /// let output = WlcOutput::dummy(0u32);
+    /// let output2 = WlcOutput::dummy(1u32);
+    /// assert!(output < output2);
+    /// assert!(output != output2);
+    /// ```
+    pub fn dummy(code: u32) -> WlcOutput {
+        WlcOutput(code as uintptr_t)
     }
 
     /// Gets user-specified data.
@@ -79,11 +111,17 @@ impl WlcOutput {
     }
 
     /// Gets a list of the current outputs.
+    ///
+    /// # Safety
+    /// This function will crash the program if run when wlc is not running.
     pub fn list() -> Vec<WlcOutput> {
         unimplemented!()
     }
 
     /// Gets the currently focused output.
+    ///
+    /// # Safety
+    /// This function will crash the program if run when wlc is not running.
     pub fn focused() -> WlcOutput {
         unimplemented!()
     }
@@ -93,7 +131,7 @@ impl WlcOutput {
     /// Names are usually assigned in the format WLC-n,
     /// where the first output is WLC-1.
     pub fn get_name(&self) -> String {
-        unimplemented!()
+        "".to_string()
     }
 
     /// Gets the sleep status of the output.
@@ -101,7 +139,7 @@ impl WlcOutput {
     /// Returns `true` if the monitor is sleeping,
     /// such as having been set with `set_sleep`.
     pub fn get_sleep(&self) -> bool {
-        unimplemented!()
+        false
     }
 
     /// Sets the sleep status of the output.
@@ -109,11 +147,14 @@ impl WlcOutput {
     }
 
     /// Gets the output resolution in pixels.
-    pub fn get_resolution(&self) -> &Size {
-        unimplemented!()
+    pub fn get_resolution<'a>(&self) -> &'a Size {
+        &ZERO_RES
     }
 
     /// Sets the resolution of the output.
+    ///
+    /// # Safety
+    /// This method will crash the program if use when wlc is not running.
     pub fn set_resolution(&self, size: Size) {
     }
 
@@ -124,12 +165,12 @@ impl WlcOutput {
     /// from floating order.
     /// This handles `wlc_output_get_views` and `wlc_output_get_mutable_views`.
     pub fn get_views(&self) -> Vec<WlcView> {
-        unimplemented!()
+        Vec::new()
     }
 
     /// Gets the mask of this output
     pub fn get_mask(&self) -> u32 {
-        unimplemented!()
+        0
     }
 
     /// Sets the mask for this output
@@ -139,14 +180,15 @@ impl WlcOutput {
     /// # Deprecated
     /// This function is equivalent to simply calling get_views
     pub fn get_mutable_views(&self) -> Vec<WlcView> {
-        unimplemented!()
+        self.get_views()
     }
 
     /// Attempts to set the views of a given output.
     ///
-    /// Returns true if the operation succeeded.
+    /// Returns success if operation succeeded. An error will be returned
+    /// if something went wrong or if wlc isn't running.
     pub fn set_views(&self, views: &mut Vec<&WlcView>) -> Result<(), &'static str> {
-        unimplemented!()
+        Err("Currently running dummy-rustwlc")
     }
 
     /// Focuses compositor on a specific output.
@@ -157,6 +199,7 @@ impl WlcOutput {
 }
 
 impl WlcView {
+
     /// Compatability/debugging function.
     ///
     /// wlc internally stores views and outputs under the same type.
@@ -167,12 +210,43 @@ impl WlcView {
         WlcOutput::from(self)
     }
 
+    /// Create a dummy WlcView for testing purposes.
+    ///
+    /// # Unsafety
+    /// The following methods on views may crash the program:
+    ///
+    /// - `WlcView::focus` if wlc is not running
+    /// - `WlcView::send_to_back` if wlc is not running
+    /// - `WlcView::send_below` if wlc is not running
+    /// - `WlcView::bring_above` if wlc is not running
+    /// - `WlcView::bring_to_font` if wlc is not running
+    ///
+    /// All other methods can be used on dummy views.
+    ///
+    /// # Note
+    /// `WlcView::root()` is equivalent to `WlcView::dummy(0)`.
+    ///
+    /// ```rust
+    /// # use rustwlc::WlcView;
+    /// assert!(WlcView::root() == WlcView::dummy(0))
+    /// ```
+    /// # Example
+    /// ```rust
+    /// # use rustwlc::WlcView;
+    /// let view = WlcView::dummy(0u32);
+    /// let view2 = WlcView::dummy(1u32);
+    /// assert!(view < view2);
+    /// assert!(view != view2);
+    /// ```
+    pub fn dummy(code: u32) -> WlcView {
+        WlcView(code as uintptr_t)
+    }
+
     /// Returns a reference to the root window (desktop background).
     ///
     /// # Example
     /// ```
-    /// use rustwlc::handle::WlcView;
-    ///
+    /// # use rustwlc::WlcView;
     /// let view = WlcView::root();
     /// assert!(view.is_root());
     /// ```
@@ -184,7 +258,7 @@ impl WlcView {
     ///
     /// # Example
     /// ```rust
-    /// use rustwlc::handle::WlcView;
+    /// # use rustwlc::WlcView;
     /// # // This example can be run because WlcView::root() does not interact with wlc
     /// let view = WlcView::root();
     /// assert!(view.is_root());
@@ -201,8 +275,7 @@ impl WlcView {
     ///
     /// # Example
     /// ```rust
-    /// use rustwlc::handle::WlcView;
-    ///
+    /// # use rustwlc::WlcView;
     /// let view = WlcView::root();
     /// assert!(view.is_root());
     /// assert!(!view.is_window());
@@ -253,7 +326,7 @@ impl WlcView {
 
     /// Gets the WlcOutput this view is currently part of.
     pub fn get_output(&self) -> WlcOutput {
-        unimplemented!()
+        WlcOutput::dummy(0)
     }
 
     /// Sets the output that the view renders on.
@@ -266,29 +339,34 @@ impl WlcView {
     ///
     /// Can be called on `WlcView::root()` to lose all focus.
     pub fn focus(&self) {
+        unimplemented!()
     }
 
     /// Sends the view to the back of the compositor
     pub fn send_to_back(&self) {
+        unimplemented!()
     }
 
     /// Sends this view underneath another.
     pub fn send_below(&self, other: &WlcView) {
+        unimplemented!()
     }
 
     /// Brings this view above another.
     pub fn bring_above(&self, other: &WlcView) {
+        unimplemented!()
     }
 
     /// Brings this view to the front of the stack
     /// within its WlcOutput.
     pub fn bring_to_front(&self) {
+        unimplemented!()
     }
 
     // TODO Get masks enum working properly
     /// Gets the current visibilty bitmask for the view.
     pub fn get_mask(&self) -> u32 {
-        unimplemented!()
+        0
     }
 
     // TODO Get masks enum working properly
@@ -298,22 +376,24 @@ impl WlcView {
 
     /// Gets the geometry of the view.
     pub fn get_geometry(&self) -> Option<&Geometry> {
-        unimplemented!()
+        None
     }
 
     /// Gets the geometry of the view (that wlc displays).
     pub fn get_visible_geometry(&self) -> Geometry {
-        unimplemented!()
+        let geo = Geometry { origin: Point { x: 0, y: 0}, size: Size { w: 0, h: 0 }};
+        return geo;
     }
 
     /// Sets the geometry of the view.
+    ///
     /// Set edges if geometry is caused by interactive resize.
     pub fn set_geometry(&self, edges: ResizeEdge, geometry: &Geometry) {
     }
 
     /// Gets the type bitfield of the curent view
     pub fn get_type(&self) -> ViewType {
-        unimplemented!()
+        ViewType::empty()
     }
 
     /// Set flag in the type field. Toggle indicates whether it is set.
@@ -323,7 +403,7 @@ impl WlcView {
     // TODO get bitflags enums
     /// Get the current ViewState bitfield.
     pub fn get_state(&self) -> ViewState {
-        unimplemented!()
+        ViewState::empty()
     }
 
     /// Set ViewState bit. Toggle indicates whether it is set or not.
@@ -332,7 +412,7 @@ impl WlcView {
 
     /// Gets parent view, returns `WlcView::root()` if this view has no parent.
     pub fn get_parent(&self) -> WlcView {
-        unimplemented!()
+        WlcView::root()
     }
 
     /// Set the parent of this view.
@@ -343,16 +423,76 @@ impl WlcView {
 
     /// Get the title of the view
     pub fn get_title(&self) -> String {
-        unimplemented!()
+        "".to_string()
     }
 
     /// Get class (shell surface only).
     pub fn get_class(&self) -> String {
-        unimplemented!()
+        "".to_string()
     }
 
     /// Get app id (xdg-surface only).
     pub fn get_app_id(&self) -> String {
-        unimplemented!()
+        "".to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::*;
+
+    #[test]
+    fn dummy_views() {
+        let dummy = WlcView::dummy(1);
+        assert!(!dummy.is_root(), "Dummy(1) is root");
+        assert!(dummy.is_window(), "Dummy(1) is root");
+        let _title = dummy.get_title();
+        let _class = dummy.get_class();
+        let _app_id = dummy.get_app_id();
+        // Let's do some stuff with views
+        dummy.close(); // works
+        let output = dummy.get_output();
+        assert!(output == WlcOutput::dummy(0));
+        dummy.set_output(&output);
+        // dummy.focus(); // SEGFAULTS
+        // dummy.send_to_back();
+        // dummy.send_below(&dummy);
+        // dummy.bring_above(&dummy);
+        // dummy.bring_to_front();
+        let mask = dummy.get_mask();
+        dummy.set_mask(mask);
+        let geometry = dummy.get_geometry();
+        assert!(geometry.is_none(), "Got geometry from dummy");
+        dummy.set_geometry(EDGE_NONE, &Geometry {
+            origin: Point { x: 0, y: 0 },
+            size: Size { w: 0, h: 0 }
+        });
+        let view_type = dummy.get_type();
+        assert!(view_type.is_empty(), "Dummy had a view type");
+        dummy.set_type(ViewType::empty(), true);
+        let view_state = dummy.get_state();
+        assert!(view_state.is_empty(), "Dummu had a view state");
+        dummy.set_state(view_state, true);
+        let parent = dummy.get_parent();
+        assert!(parent.is_root(), "Dummy had real parent");
+        dummy.set_parent(&parent);
+    }
+
+    #[test]
+    fn dummy_outputs() {
+        let dummy = WlcOutput::dummy(1);
+        //let _current = WlcOutput::focused();
+        //let _outputs = WlcOutput::list();
+        //dummy.set_resolution(resolution.clone());
+        dummy.schedule_render();
+        let _name = dummy.get_name();
+        let sleep = dummy.get_sleep();
+        dummy.set_sleep(sleep);
+        let _resolution = dummy.get_resolution();
+        let views = dummy.get_views();
+        dummy.set_views(&mut views.iter().collect()).unwrap_err();
+        let mask = dummy.get_mask();
+        dummy.set_mask(mask);
+        WlcOutput::focus(Some(&dummy));
     }
 }
