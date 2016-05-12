@@ -128,7 +128,7 @@ pub fn get_backend_type() -> BackendType {
 /// run_wlc();
 /// ```
 pub fn init() -> Option<fn() -> ()> {
-        None
+    Some(run_wlc)
 }
 
 /// Deprecated alias to init().
