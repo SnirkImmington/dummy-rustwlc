@@ -1,6 +1,6 @@
 ## Dummy rustwlc
 
-**Currently matching rustwlc v0.3.2**
+**Currently matching rustwlc v0.3.3**
 
 This project exists so one can compile [rust-wlc](https://github.com/Immington-Industries/rust-wlc) without needing C library references.
 
@@ -8,7 +8,9 @@ It is used in [way-cooler](https://github.com/Immington-Industries/way-cooler)'s
 
 ### Usage
 
-All methods with a return type have their implementation replaced with `unimplemented!()`, calling their code will cause yours to panic.
+Methods with no return type are no-ops. Methods on `WlcView` and `WlcOutput` that would usually run with dummy handles will run, unsafe methods will panic.
+
+Other methods with return types have been replaced with `unimplemented!()`.
 
 The methods in `callbacks` will run without side effects and `rustwlc::init` returns a function that simply prints a message to the console.
 
