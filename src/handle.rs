@@ -338,7 +338,6 @@ impl WlcView {
     ///
     /// Can be called on `WlcView::root()` to lose all focus.
     pub fn focus(&self) {
-        unimplemented!()
     }
 
     /// Sends the view to the back of the compositor
