@@ -1,8 +1,6 @@
 //! Contains methods for interacting with the pointer
 //! and keyboard of wlc.
 
-use super::types::{KeyMod, Point};
-
 pub mod pointer {
 //! Methods for interacting with the mouse
     use super::super::types::{Point};

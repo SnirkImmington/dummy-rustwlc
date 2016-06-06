@@ -5,9 +5,8 @@
 //! - **Eq, Ord**: compare the underlying `uintptr_t` handle
 //! - **Clone**: View handles can safely be cloned.
 
-use libc::{uintptr_t, c_char, c_void};
+use libc::{uintptr_t};
 
-use super::pointer_to_string;
 use super::types::{Geometry, ResizeEdge, Point, Size, ViewType, ViewState};
 
 #[repr(C)]
