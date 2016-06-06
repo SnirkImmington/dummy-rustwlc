@@ -342,23 +342,19 @@ impl WlcView {
 
     /// Sends the view to the back of the compositor
     pub fn send_to_back(&self) {
-        unimplemented!()
     }
 
     /// Sends this view underneath another.
     pub fn send_below(&self, other: &WlcView) {
-        unimplemented!()
     }
 
     /// Brings this view above another.
     pub fn bring_above(&self, other: &WlcView) {
-        unimplemented!()
     }
 
     /// Brings this view to the front of the stack
     /// within its WlcOutput.
     pub fn bring_to_front(&self) {
-        unimplemented!()
     }
 
     // TODO Get masks enum working properly
