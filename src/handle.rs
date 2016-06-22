@@ -369,8 +369,11 @@ impl WlcView {
     }
 
     /// Gets the geometry of the view.
-    pub fn get_geometry(&self) -> Option<&Geometry> {
-        None
+    pub fn get_geometry(&self) -> Option<Geometry> {
+        Some(Geometry {
+            origin: Point { x: 0, y: 0},
+            size:   Size  { w: 0, h: 0}
+        })
     }
 
     /// Gets the geometry of the view (that wlc displays).
