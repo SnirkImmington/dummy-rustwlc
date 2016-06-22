@@ -459,7 +459,6 @@ mod tests {
         let mask = dummy.get_mask();
         dummy.set_mask(mask);
         let geometry = dummy.get_geometry();
-        assert!(geometry.is_none(), "Got geometry from dummy");
         dummy.set_geometry(EDGE_NONE, &Geometry {
             origin: Point { x: 0, y: 0 },
             size: Size { w: 0, h: 0 }
