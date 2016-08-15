@@ -1,7 +1,9 @@
 [package]
-name = "rustwlc"
-version = "0.3.1"
-authors = ["Snirk Immington <snirk.immington@gmail.com>"]
+name = "dummy-rustwlc"
+version = "0.3.3"
+description = "A dummy version of the functions defined in rust-wlc, to be used in testing and for travis builds"
+license = "MIT"
+authors = ["Snirk Immington <snirk.immington@gmail.com>", "Preston Carpenter <APragmaticPlace@gmail.com>"]
 
 [dependencies]
 libc = "0.2.*"

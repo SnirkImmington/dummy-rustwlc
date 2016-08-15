@@ -5,19 +5,18 @@
 //! - **Eq, Ord**: compare the underlying `uintptr_t` handle
 //! - **Clone**: View handles can safely be cloned.
 
-use libc::{uintptr_t, c_char, c_void};
+use libc::{uintptr_t};
 
-use super::pointer_to_string;
 use super::types::{Geometry, ResizeEdge, Point, Size, ViewType, ViewState};
 
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 /// Represents a handle to a wlc view.
 ///
 pub struct WlcView(uintptr_t);
 
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 /// Represents a handle to a wlc output.
 pub struct WlcOutput(uintptr_t);
 
@@ -147,15 +146,15 @@ impl WlcOutput {
     }
 
     /// Gets the output resolution in pixels.
-    pub fn get_resolution<'a>(&self) -> &'a Size {
-        &ZERO_RES
+    pub fn get_resolution(&self) -> Option<Size> {
+        Some(ZERO_RES)
     }
 
     /// Sets the resolution of the output.
     ///
     /// # Safety
     /// This method will crash the program if use when wlc is not running.
-    pub fn set_resolution(&self, size: Size) {
+    pub fn set_resolution(&self, size: Size, scaling: u32) {
     }
 
     /// Get views in stack order.
@@ -187,14 +186,14 @@ impl WlcOutput {
     ///
     /// Returns success if operation succeeded. An error will be returned
     /// if something went wrong or if wlc isn't running.
-    pub fn set_views(&self, views: &mut Vec<&WlcView>) -> Result<(), &'static str> {
+    pub fn set_views(&self, views: &mut Vec<WlcView>) -> Result<(), &'static str> {
         Err("Currently running dummy-rustwlc")
     }
 
     /// Focuses compositor on a specific output.
     ///
     /// Pass in Option::None for no focus.
-    pub fn focus(output: Option<&WlcOutput>) {
+    pub fn focus(output: Option<WlcOutput>) {
     }
 }
 
@@ -332,35 +331,30 @@ impl WlcView {
     /// Sets the output that the view renders on.
     ///
     /// This may not be supported by wlc at this time.
-    pub fn set_output(&self, output: &WlcOutput) {
+    pub fn set_output(&self, output: WlcOutput) {
     }
 
     /// Brings this view to focus.
     ///
     /// Can be called on `WlcView::root()` to lose all focus.
     pub fn focus(&self) {
-        unimplemented!()
     }
 
     /// Sends the view to the back of the compositor
     pub fn send_to_back(&self) {
-        unimplemented!()
     }
 
     /// Sends this view underneath another.
-    pub fn send_below(&self, other: &WlcView) {
-        unimplemented!()
+    pub fn send_below(&self, other: WlcView) {
     }
 
     /// Brings this view above another.
-    pub fn bring_above(&self, other: &WlcView) {
-        unimplemented!()
+    pub fn bring_above(&self, other: WlcView) {
     }
 
     /// Brings this view to the front of the stack
     /// within its WlcOutput.
     pub fn bring_to_front(&self) {
-        unimplemented!()
     }
 
     // TODO Get masks enum working properly
@@ -375,8 +369,11 @@ impl WlcView {
     }
 
     /// Gets the geometry of the view.
-    pub fn get_geometry(&self) -> Option<&Geometry> {
-        None
+    pub fn get_geometry(&self) -> Option<Geometry> {
+        Some(Geometry {
+            origin: Point { x: 0, y: 0},
+            size:   Size  { w: 0, h: 0}
+        })
     }
 
     /// Gets the geometry of the view (that wlc displays).
@@ -388,7 +385,7 @@ impl WlcView {
     /// Sets the geometry of the view.
     ///
     /// Set edges if geometry is caused by interactive resize.
-    pub fn set_geometry(&self, edges: ResizeEdge, geometry: &Geometry) {
+    pub fn set_geometry(&self, edges: ResizeEdge, geometry: Geometry) {
     }
 
     /// Gets the type bitfield of the curent view
@@ -418,7 +415,7 @@ impl WlcView {
     /// Set the parent of this view.
     ///
     /// Call with `WlcView::root()` to make its parent the root window.
-    pub fn set_parent(&self, parent: &WlcView) {
+    pub fn set_parent(&self, parent: WlcView) {
     }
 
     /// Get the title of the view
@@ -453,7 +450,7 @@ mod tests {
         dummy.close(); // works
         let output = dummy.get_output();
         assert!(output == WlcOutput::dummy(0));
-        dummy.set_output(&output);
+        dummy.set_output(output);
         // dummy.focus(); // SEGFAULTS
         // dummy.send_to_back();
         // dummy.send_below(&dummy);
@@ -462,7 +459,6 @@ mod tests {
         let mask = dummy.get_mask();
         dummy.set_mask(mask);
         let geometry = dummy.get_geometry();
-        assert!(geometry.is_none(), "Got geometry from dummy");
         dummy.set_geometry(EDGE_NONE, &Geometry {
             origin: Point { x: 0, y: 0 },
             size: Size { w: 0, h: 0 }
@@ -475,7 +471,7 @@ mod tests {
         dummy.set_state(view_state, true);
         let parent = dummy.get_parent();
         assert!(parent.is_root(), "Dummy had real parent");
-        dummy.set_parent(&parent);
+        dummy.set_parent(parent);
     }
 
     #[test]
@@ -489,10 +485,10 @@ mod tests {
         let sleep = dummy.get_sleep();
         dummy.set_sleep(sleep);
         let _resolution = dummy.get_resolution();
-        let views = dummy.get_views();
-        dummy.set_views(&mut views.iter().collect()).unwrap_err();
+        let mut views = dummy.get_views();
+        dummy.set_views(&mut views).unwrap_err();
         let mask = dummy.get_mask();
         dummy.set_mask(mask);
-        WlcOutput::focus(Some(&dummy));
+        WlcOutput::focus(Some(dummy));
     }
 }

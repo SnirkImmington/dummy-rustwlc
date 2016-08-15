@@ -57,6 +57,7 @@
 //! [way-cooler]: https://github.com/Immington-Industries/way-cooler
 
 #![warn(missing_docs)]
+#![allow(unused_variables)]
 
 extern crate libc;
 
@@ -179,6 +180,7 @@ pub fn log_set_handler(handler: extern "C" fn(type_: LogType, text: *const libc:
 pub fn log_set_rust_handler(handler: fn(type_: LogType, text: &str)) {
 }
 
+#[allow(dead_code)]
 fn default_log_callback(log_type: LogType, text: &str) {
     println!("wlc [{:?}] {}", log_type, text);
 }
