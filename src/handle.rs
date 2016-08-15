@@ -146,15 +146,15 @@ impl WlcOutput {
     }
 
     /// Gets the output resolution in pixels.
-    pub fn get_resolution<'a>(&self) -> &'a Size {
-        &ZERO_RES
+    pub fn get_resolution(&self) -> Option<Size> {
+        Some(ZERO_RES)
     }
 
     /// Sets the resolution of the output.
     ///
     /// # Safety
     /// This method will crash the program if use when wlc is not running.
-    pub fn set_resolution(&self, size: Size) {
+    pub fn set_resolution(&self, size: Size, scaling: u32) {
     }
 
     /// Get views in stack order.
@@ -186,14 +186,14 @@ impl WlcOutput {
     ///
     /// Returns success if operation succeeded. An error will be returned
     /// if something went wrong or if wlc isn't running.
-    pub fn set_views(&self, views: &mut Vec<&WlcView>) -> Result<(), &'static str> {
+    pub fn set_views(&self, views: &mut Vec<WlcView>) -> Result<(), &'static str> {
         Err("Currently running dummy-rustwlc")
     }
 
     /// Focuses compositor on a specific output.
     ///
     /// Pass in Option::None for no focus.
-    pub fn focus(output: Option<&WlcOutput>) {
+    pub fn focus(output: Option<WlcOutput>) {
     }
 }
 
@@ -331,7 +331,7 @@ impl WlcView {
     /// Sets the output that the view renders on.
     ///
     /// This may not be supported by wlc at this time.
-    pub fn set_output(&self, output: &WlcOutput) {
+    pub fn set_output(&self, output: WlcOutput) {
     }
 
     /// Brings this view to focus.
@@ -345,11 +345,11 @@ impl WlcView {
     }
 
     /// Sends this view underneath another.
-    pub fn send_below(&self, other: &WlcView) {
+    pub fn send_below(&self, other: WlcView) {
     }
 
     /// Brings this view above another.
-    pub fn bring_above(&self, other: &WlcView) {
+    pub fn bring_above(&self, other: WlcView) {
     }
 
     /// Brings this view to the front of the stack
@@ -385,7 +385,7 @@ impl WlcView {
     /// Sets the geometry of the view.
     ///
     /// Set edges if geometry is caused by interactive resize.
-    pub fn set_geometry(&self, edges: ResizeEdge, geometry: &Geometry) {
+    pub fn set_geometry(&self, edges: ResizeEdge, geometry: Geometry) {
     }
 
     /// Gets the type bitfield of the curent view
@@ -415,7 +415,7 @@ impl WlcView {
     /// Set the parent of this view.
     ///
     /// Call with `WlcView::root()` to make its parent the root window.
-    pub fn set_parent(&self, parent: &WlcView) {
+    pub fn set_parent(&self, parent: WlcView) {
     }
 
     /// Get the title of the view
@@ -450,7 +450,7 @@ mod tests {
         dummy.close(); // works
         let output = dummy.get_output();
         assert!(output == WlcOutput::dummy(0));
-        dummy.set_output(&output);
+        dummy.set_output(output);
         // dummy.focus(); // SEGFAULTS
         // dummy.send_to_back();
         // dummy.send_below(&dummy);
@@ -471,7 +471,7 @@ mod tests {
         dummy.set_state(view_state, true);
         let parent = dummy.get_parent();
         assert!(parent.is_root(), "Dummy had real parent");
-        dummy.set_parent(&parent);
+        dummy.set_parent(parent);
     }
 
     #[test]
@@ -485,10 +485,10 @@ mod tests {
         let sleep = dummy.get_sleep();
         dummy.set_sleep(sleep);
         let _resolution = dummy.get_resolution();
-        let views = dummy.get_views();
-        dummy.set_views(&mut views.iter().collect()).unwrap_err();
+        let mut views = dummy.get_views();
+        dummy.set_views(&mut views).unwrap_err();
         let mask = dummy.get_mask();
         dummy.set_mask(mask);
-        WlcOutput::focus(Some(&dummy));
+        WlcOutput::focus(Some(dummy));
     }
 }

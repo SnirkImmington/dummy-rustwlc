@@ -29,12 +29,12 @@ pub mod keyboard {
     }
 
     /// Gets a keysym given a key and modifiers.
-    pub fn get_keysym_for_key(key: u32, modifiers: &KeyMod) -> Keysym {
+    pub fn get_keysym_for_key(key: u32, modifiers: KeyMod) -> Keysym {
         unimplemented!()
     }
 
     /// Gets a UTF32 value for a given key and modifiers.
-    pub fn get_utf32_for_key(key: u32, modifiers: &KeyMod) -> u32 {
+    pub fn get_utf32_for_key(key: u32, modifiers: KeyMod) -> u32 {
         unimplemented!()
     }
 }
