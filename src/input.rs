@@ -18,7 +18,7 @@ pub mod pointer {
 
 pub mod keyboard {
 //! Methods for interacting with the keyboard
-    use super::super::types::{KeyMod};
+    use super::super::types::{KeyboardModifiers};
     use super::super::xkb::Keysym;
 
     /// Get currently held keys.
