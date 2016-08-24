@@ -1,6 +1,6 @@
 [package]
 name = "dummy-rustwlc"
-version = "0.3.3"
+version = "0.5.1"
 description = "A dummy version of the functions defined in rust-wlc, to be used in testing and for travis builds"
 license = "MIT"
 authors = ["Snirk Immington <snirk.immington@gmail.com>", "Preston Carpenter <APragmaticPlace@gmail.com>"]
